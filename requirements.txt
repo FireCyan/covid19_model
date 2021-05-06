@@ -1,0 +1,6 @@
+pandas
+numpy
+requests==2.22.0
+beautifulsoup4==4.6.0
+matplotlib==2.1.2
+import-ipynb==0.1.3
