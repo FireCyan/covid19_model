@@ -10,11 +10,12 @@
 
 ## Introduction
 (The model was built around 2020 April/May, so the parameters may be a bit outdated. But I think the model concept is still relevant)
+
 One of my friends asked me if there are any factors that drive the number of people infected with Covid-19.
 
 I thought of doing anaylsis with some factors such as the number masks. However, it is difficult to get a good estimate of the number of masks. Therefore, I dropped the idea of getting the relationship between infected people and masks.
 
-However, another factor got my attention. There was news about the number of critical beds per capital for each country, and I plotted a simple graph to show the relationship between that and the death rate due to Covid-19 for some countries. With the size showing the number for people infected, I saw some patterns and I wanted to investigate further.
+However, another factor got my attention. There was news about the number of critical beds per capital for each country, and I plotted a simple graph to show the relationship between that and the death rate due to Covid-19 for some countries. With the size showing the number for people infected, I saw some patterns and wanted to investigate further.
 
 ![death_rate_vs_ICU_per_capita](/fig_example/death_rate_per_1m_vs_icu.png)
 
@@ -62,7 +63,7 @@ How the state changes:
 
 The time step unit is 1 day
 
-Since the probability of people getting to different states is highly dependent on age, I would make several different P matrices for each age group for the investigation. The age groups are:
+Since the probability of people getting to different states is highly dependent on age, I made several different P matrices for each age group for the investigation. The age groups are:
 - 0-9
 - 10-19
 - 20-29
