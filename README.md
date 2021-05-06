@@ -21,6 +21,8 @@ However, another factor got my attention. There was news about the number of cri
 
 Therefore, I built a Markov's chain model to answer some of my questions. What I wanted to find out is, assuming that the death rate is relatively stable provided that there are sufficient medical resources, what is the portion of people who could have been saved but passed away due to lack of medical resources? Also, given a certain number of critical beds available, is it possible to predict the number of deaths due to different causes? And what is the number of critical beds each country needs to minimise casualty? I used this model to try solve these questions.
 
+---
+
 ## Quick start
 There are 4 types of graph that can be plotted with scripts provided
 1. covid19_status_plot_script.py
@@ -34,6 +36,8 @@ There are 4 types of graph that can be plotted with scripts provided
 4. covid19_icu_patient_trend_fixed_total_script.py
     - Model and plot curves showing ICU numbers used with fixed number of total infected patients distributed to different numbers of days (can plot for different numbers of total infected patients)
 
+---
+
 ## Plot examples
 ### covid19_status_plot_script.py
 ![status_plot_example](/fig_example/status_plot_lombardy.png)
@@ -43,6 +47,9 @@ There are 4 types of graph that can be plotted with scripts provided
 ![constant_inflow_example](/fig_example/constant_inflow_case_wuhan.png)
 ### covid19_icu_patient_trend_fixed_total_script.py
 ![fixed_case_diff_days_example](/fig_example/fix_case_diff_days_nsw.png)
+
+---
+
 ## Method
 Using a P matrix that stores the probability of one state going to the others, I can get the number of people in each state for the next time step.
 
