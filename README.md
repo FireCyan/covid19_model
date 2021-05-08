@@ -3,6 +3,7 @@
 ## Table of contents
 
  * [Introduction](#Introduction)
+ * [Installation](#Installation)
  * [Quick start](#Quick-start)
  * [Plot examples](#Plot-examples)
  * [Method](#Method)
@@ -20,6 +21,17 @@ However, another factor got my attention. There was news about the number of cri
 ![death_rate_vs_ICU_per_capita](/fig_example/death_rate_per_1m_vs_icu.png)
 
 Therefore, I built a Markov's chain model to answer some of my questions. What I wanted to find out is, assuming that the death rate is relatively stable provided that there are sufficient medical resources, what is the portion of people who could have been saved but passed away due to lack of medical resources? Also, given a certain number of critical beds available, is it possible to predict the number of deaths due to different causes? And what is the number of critical beds each country needs to minimise casualty? I used this model to try solve these questions.
+
+---
+
+## Installation
+```
+$ pip install -r requirements.txt
+```
+Or use conda install if using Anaconda
+```
+$ conda install --file requirements.txt
+```
 
 ---
 
