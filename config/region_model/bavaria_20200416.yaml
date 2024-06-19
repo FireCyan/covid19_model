@@ -1,4 +1,4 @@
-raw_data: \csv_input\df_Bavaria_cleaned_20200415.csv
+acc_case_data: \data\processed\df_bavaria_cleaned_20200415.csv
 col_daily_case: Bavaria
 
 region:

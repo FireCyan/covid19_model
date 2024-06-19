@@ -1,4 +1,4 @@
-raw_data: \csv_input\df_NSW_cleaned_20200425.csv
+acc_case_data: \data\processed\df_nsw_cleaned_20200425.csv
 col_daily_case: acc_cases
 
 region:

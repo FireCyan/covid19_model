@@ -1,4 +1,4 @@
-raw_data: \csv_input\df_lombardia_cleaned_20200417.csv
+daily_case_data: \data\processed\df_lombardia_cleaned_20200417.csv
 col_daily_case: LOM
 
 region:

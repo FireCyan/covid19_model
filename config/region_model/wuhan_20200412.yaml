@@ -1,4 +1,4 @@
-raw_data: \csv_input\df_wuhan_20200412.csv
+acc_case_data: \data\processed\df_wuhan_cleaned_20200412.csv
 col_daily_case: acc_cases
 
 region:
