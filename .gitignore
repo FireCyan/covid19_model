@@ -1,2 +1,5 @@
 
 *.pyc
+
+covid19_venv
+/data
