@@ -1,10 +1,16 @@
+import git
+repo = git.Repo('.', search_parent_directories=True)
+repo_loc = repo.working_tree_dir
+
+import os
+import sys
+from pathlib import Path
+
+sys.path.append(repo_loc)
+
 import numpy as np
 import pandas as pd
-
-# TODO: fix the numbers by using variables rather than hard-coded numbers
-
-
-
+from src.conf_helper import CovidConf
 
 class region():
     
@@ -42,7 +48,66 @@ class region():
     def get_total_pop(self):
         return self.pop.sum()
 
+def create_region(
+        config_file: str,
+        config_dir='config/region_model'
+    ) -> region:
+    config = CovidConf(project_dir=repo_loc, config_file=config_file, config_dir=config_dir)
+    
+    ##### Extract region information #####
+    region_name = config['region']['name']
+    country = config['country']['name']
+    age_group_pop_region = []
+    for i in config['region']['population_group']:
+        age_group_pop_region.append(config['region']['population_group'].get(i))
+    age_group_pop_region = np.array(age_group_pop_region)
+    age_group_pop_ratio_region = age_group_pop_region/age_group_pop_region.sum()
 
+    # Daily cases
+    df_region_case = pd.read_csv(repo_loc + config['raw_data'])
+    acc_case = df_region_case[config['col_daily_case']].to_numpy() # accumulated Covid cases
+    daily_case = np.append(acc_case[0], np.diff(acc_case))
+    # if 'raw_data' in config.__dict__.keys():
+        
+    # elif config['region']['name'].upper() == 'WUHAN':
+    #     acc_case = np.array(config['daily_accumulated_case_data']) # accumulated Covid cases
+    
+    # ICU beds
+    if config['region']['name'].upper() == 'BAVARIA':
+        # According to Wikipedia, there are 28000 ICU beds in Germany as of 16-Apr-2020
+        # Using 83020000 as the total population of Germany and the ratio between 
+        # German total population:Bavaria total population, can get ICU = 13076721/83020000*28000 = 4410
+        pop_country = config['country']['population']
+        icu_country = config['country']['icu_bed']
+        t_icu_est = int(age_group_pop_region.sum()/pop_country*icu_country)
+    elif config['region']['name'].upper() == 'WUHAN':
+        # https://www.chainnews.com/articles/852047607288.htm
+        # Assume there are 5 ICU beds per 100000 in China
+        # Wuhan should have 5*wuhan_pop.sum()/100000 = 489
+        # Also assume that the number of ICU is increased 3 times (2 new hospitals + additional resources from other provinces)
+        t_icu_est = np.round(5*age_group_pop_region.sum()/100000*3)
+    else:
+        t_icu_est = config['region']['icu_bed_estimated']
+
+    t_icu_ade = config['region']['icu_bed_required']
+
+    # Number of deaths
+    n_death = config['region']['death']
+
+    ##### Build region attribute object #####
+    region_obj = region(
+        region_name, # region_name
+        country, # country
+        daily_case, # daily_case
+        acc_case, # acc_case
+        age_group_pop_region, # population age group
+        age_group_pop_ratio_region, # population age group ratio
+        t_icu_est, # estimated available number of ICUs
+        t_icu_ade, # adequate number of ICU required
+        n_death, # number of deaths
+    )
+
+    return region_obj
 
 ############
 # Bavaria
@@ -59,7 +124,7 @@ t_icu_est_bavaria = int(pop_bavaria.sum()/83020000*28000) # Initial estimated nu
 
 # Bavaria adequate ICU requirement: 3130 (total accumulated number of infected: 35142 16-Apr-2020)
 t_icu_ade_bavaria = 3130
-df_bavaria = pd.read_csv("./csv_input/df_Bavaria_cleaned_20200415.csv")
+df_bavaria = pd.read_csv(repo_loc + "/csv_input/df_Bavaria_cleaned_20200415.csv")
 
 acc_case_bavaria = df_bavaria['Bavaria'].to_numpy() # accumulated number
 daily_case_bavaria = np.append(acc_case_bavaria[0], np.diff(acc_case_bavaria)) # daily number
@@ -88,7 +153,7 @@ pop_ratio_lombardy = pop_lombardy/pop_lombardy.sum()
 t_icu_est_lombardy = 1174 # Initial estimated number of ICU beds in lombardy
 
 
-df_lombardy = pd.read_csv("./csv_input/df_lombardia_cleaned_20200417.csv")
+df_lombardy = pd.read_csv(repo_loc + "/csv_input/df_lombardia_cleaned_20200417.csv")
 
 daily_case_lombardy = df_lombardy['LOM'].to_numpy() # daily number
 acc_case_lombardy = np.cumsum(daily_case_lombardy) # accumulated number
@@ -164,7 +229,7 @@ pop_nsw = np.array([465135 + 478184, 443009 + 448425, 489673 + 527161, 540360 + 
 
 pop_ratio_nsw = pop_nsw/pop_nsw.sum()
 
-df_nsw = pd.read_csv("./csv_input/df_NSW_cleaned_20200425.csv")
+df_nsw = pd.read_csv(repo_loc + "/csv_input/df_NSW_cleaned_20200425.csv")
 
 acc_case_nsw = df_nsw['acc_cases'].to_numpy() # accumulated number
 daily_case_nsw = np.append(acc_case_nsw[0], np.diff(acc_case_nsw)) # daily number

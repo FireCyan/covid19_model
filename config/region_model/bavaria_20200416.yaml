@@ -1,0 +1,22 @@
+raw_data: \csv_input\df_Bavaria_cleaned_20200415.csv
+col_daily_case: Bavaria
+
+region:
+  name: Bavaria
+  population_group:
+    0_9: 1200904
+    10_19: 1217533
+    20_29: 1638957
+    30_39: 1717926
+    40_49: 1701205
+    50_59: 2108710
+    60_69: 1536697
+    70_79: 1170153
+    80_: 784636
+  death: 1049
+  icu_bed_required: 3130 # Bavaria adequate ICU requirement: 3130 (total accumulated number of infected: 35142 16-Apr-2020)
+
+country:
+  name: Germany
+  population: 83020000
+  icu_bed: 28000 # According to Wikipedia, there are 28000 ICU beds in Germany as of 16-Apr-2020

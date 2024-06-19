@@ -1,0 +1,21 @@
+raw_data: \csv_input\df_NSW_cleaned_20200425.csv
+col_daily_case: acc_cases
+
+region:
+  name: NSW
+  population_group:
+    0_9: 943319
+    10_19: 891434
+    20_29: 1016834
+    30_39: 1040084
+    40_49: 995609
+    50_59: 955272
+    60_69: 804514
+    70_79: 509864
+    80_: 323312
+  death: 33
+  icu_bed_estimated: 874 # https://www.anzics.com.au/wp-content/uploads/2019/10/2018-ANZICS-CORE-Report.pdf
+  icu_bed_required: 230 # NSW adequate ICU requirement: 230 (total accumulated number of infected: 2994, 25-Apr-2020)
+
+country:
+  name: Australia
