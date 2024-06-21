@@ -37,13 +37,15 @@ def plot_state_num(df, n_total, title):
     ax.set_xlabel('Day number', fontsize=24, fontname="Arial",fontweight="bold")
     ax.set_ylabel('Number of people', fontsize=24, rotation=90, fontname="Arial",fontweight="bold")
     ax.tick_params(labelsize=20, width=3, length=10, which='major', direction='in')
-    for tick in ax.xaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
 
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
+    for tick in ax.get_xticklabels():
+        tick.set_fontsize(20)
+        tick.set_fontweight('bold')
+
+    for tick in ax.get_yticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight('bold')
+
     fig.suptitle(title, fontsize=24, fontname="Arial",fontweight="bold")
     ax.legend(fontsize=18)
 
@@ -85,12 +87,12 @@ def plot_death_cause(df, n_total, title):
     ax.legend(fontsize=20)
 
     for tick in ax.get_xticklabels():
-            tick.set_fontsize(20) 
-            tick.set_fontweight("bold")
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
     for tick in ax.get_yticklabels():
-            tick.set_fontsize(20) 
-            tick.set_fontweight("bold")
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
     ax2 = ax.twinx()
 
@@ -130,12 +132,12 @@ def plot_death_cumsum(df, n_total, title):
     ax.legend(loc='upper left', fontsize=20)
 
     for tick in ax.get_xticklabels():
-            tick.set_fontsize(20) 
-            tick.set_fontweight("bold")
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
     for tick in ax.get_yticklabels():
-            tick.set_fontsize(20) 
-            tick.set_fontweight("bold")
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
     ax2 = ax.twinx()
 
@@ -219,12 +221,12 @@ def plot_death_icu_rate(df, list_region):
     ax.legend(fontsize=18)
 
     for tick in ax.get_xticklabels():
-        tick.set_fontsize(20) 
-        tick.set_fontweight("bold")
+        tick.set_fontsize(20)
+        tick.set_fontweight('bold')
 
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
+    for tick in ax.get_yticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight('bold')
         
     return ax
 
@@ -257,13 +259,13 @@ def plot_constant_daily_case_curve(region, list_constant_df_infected, constant_f
     ax.set_ylabel('Number of people (dashed line: ICU number)', fontsize=24, rotation=90, fontname="Arial",fontweight="bold")
     ax.tick_params(labelsize=20, width=3, length=10, which='major', direction='in')
 
-    for tick in ax.xaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
+    for tick in ax.get_xticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
+    for tick in ax.get_yticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
     fig.suptitle(title, fontsize=24, fontname="Arial",fontweight="bold")
 
     factor = 1
@@ -360,14 +362,15 @@ def plot_fix_case_diff_days(region, list_fix_total_diff_days_df_infected, fix_to
     ax.set_xlabel('Day number', fontsize=24, fontname="Arial",fontweight="bold")
     ax.set_ylabel('Number of people (dashed line: ICU number)', fontsize=24, rotation=90, fontname="Arial",fontweight="bold")
     ax.tick_params(labelsize=20, width=3, length=10, which='major', direction='in')
+    
+    for tick in ax.get_xticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
-    for tick in ax.xaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
+    for tick in ax.get_yticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
     fig.suptitle(title, fontsize=24, fontname="Arial",fontweight="bold")
 
 
