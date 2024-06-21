@@ -371,4 +371,4 @@ def get_prob_matrix(config: CovidConf):
     P_matrix[state_num["d_state"], state_num["r_state"], :] = Pdr
     P_matrix[state_num["d_state"], state_num["d_state"], :] = Pdd
 
-    return P_matrix # TODO: add back
+    return P_matrix

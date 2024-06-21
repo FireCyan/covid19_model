@@ -4,9 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from src.covid19_prob_parameter import state_num # TODO: add back
-# TODO remove below
-# from src.covid19_prob_parameter import Psc, Psd, Pcd, Phd, Phr, Phiwd, Phvwd, Pid, Pir, Pvd, Pvr, h_i_rate, icu_with_vent_rate, state_num, d_cause_num
+from src.covid19_prob_parameter import state_num
 
 
 ################################
@@ -17,19 +15,13 @@ from src.covid19_prob_parameter import state_num # TODO: add back
 def severe_prob_update(x, a_hosp_bed, n_age_group, young_age_first):
     # Severe case update testing
     Psh = np.zeros((n_age_group))
-#     print("a_hosp_bed: ", a_hosp_bed)
-    
+
     if a_hosp_bed > 0:
         n_severe = x[:, state_num["s_state"]]
         zero_mask = n_severe == 0
         
         if not young_age_first:
             n_severe = np.array(x.sum(axis=0)[state_num["s_state"]])
-            
-        
-
-#         a_hosp_bed = t_hosp_bed - x.sum(axis=0)[state_num["h_state"]] # available hospital beds = total - number of patients in hospital beds
-
 
         severe_mat_acc = n_severe.cumsum(axis=0)
         hosp_bed_left = a_hosp_bed - np.insert(severe_mat_acc, 0, 0)[:-1]
@@ -38,35 +30,16 @@ def severe_prob_update(x, a_hosp_bed, n_age_group, young_age_first):
         if len(severe_mat_acc) == 1:
             severe_mat_acc = np.ones(n_age_group)*severe_mat_acc[0]
             hosp_bed_left = np.ones(n_age_group)*hosp_bed_left[0]
-                        
-        
-
-        # print("n_severe: ", n_severe)
-#         print("severe_mat_acc: ", severe_mat_acc)
-#         print("a_hosp_bed: ", a_hosp_bed)
-        # print("hosp_bed_left: ", hosp_bed_left)
 
         full_fill_mask = np.bitwise_and((severe_mat_acc <= a_hosp_bed), ~zero_mask)
 
-#         print("full_fill_mask: ", full_fill_mask)
-
         partial_fill_mask = np.bitwise_and(np.bitwise_and(~full_fill_mask, hosp_bed_left >= 0), ~zero_mask)
-
-#         print("partial_fill_mask: ", partial_fill_mask)
 
         if full_fill_mask.any():
             Psh[full_fill_mask] = 1
         if partial_fill_mask.any():
             Psh[partial_fill_mask] = \
             np.array(hosp_bed_left[partial_fill_mask]/n_severe[partial_fill_mask]).flatten()
-
-#         if young_age_first:
-#             a_hosp_bed = a_hosp_bed - np.dot(Psh, n_severe)
-#             a_hosp_bed = a_hosp_bed[0]
-#         else:
-#             a_hosp_bed = a_hosp_bed - Psh[0,0]*n_severe
-            
-        # print("Psh: ", Psh)
     
     return Psh
 
@@ -92,17 +65,6 @@ def icu_or_vent_prob_update(a_resource, r_mat_acc, n_hosp, n_critical, n_age_gro
         zero_mask_h_to_needing = n_h_to_needing == 0
         zero_mask_critical_to_resource = n_critical_to_resource == 0
         
-        # print('n_hosp: ', n_hosp)
-        # print('n_hosp sum: ', n_hosp.sum())
-        # print('n_critical: ', n_critical)
-        # print('n_critical sum: ', n_critical.sum())
-        # print('n_awaiting: ', n_awaiting)
-        # print('n_awaiting sum: ', n_awaiting.sum())
-        # print('n_h_to_needing: ', n_h_to_needing)
-        # print('n_h_to_needing sum: ', n_h_to_needing.sum())
-        # print('n_critical_to_resource: ', n_critical_to_resource)
-        # print('n_critical_to_resource sum: ', n_critical_to_resource.sum())
-        
         if not young_age_first:
             # If young_age_first is not applied, then let the sum of each state for all age groups to be the same
             # To do so, accumulate the sum over columns
@@ -113,13 +75,10 @@ def icu_or_vent_prob_update(a_resource, r_mat_acc, n_hosp, n_critical, n_age_gro
             n_h_to_needing = np.repeat(n_h_to_needing.sum(), n_age_group)
             n_critical = np.repeat(n_critical.sum(), n_age_group)
             n_critical_to_resource = np.repeat(n_critical_to_resource.sum(), n_age_group)
-        
-#         print('n_hosp: ', n_hosp)
+
         r_mat_acc = r_mat_acc.flatten(order='F')
         r_mat_acc = r_mat_acc.cumsum(axis=0)
         resource_left = a_resource - np.insert(r_mat_acc, 0, 0)[:-1]
-        
-        # print("r_mat_acc: ", r_mat_acc)
         
         if young_age_first:
             r_mat_acc = np.reshape(r_mat_acc, (3, n_age_group), order='F')
@@ -137,11 +96,6 @@ def icu_or_vent_prob_update(a_resource, r_mat_acc, n_hosp, n_critical, n_age_gro
         r_partial_fill_mask[0, :] = np.bitwise_and(r_partial_fill_mask[0, :], ~zero_mask_awaiting)
         r_partial_fill_mask[1, :] = np.bitwise_and(r_partial_fill_mask[1, :], ~zero_mask_h_to_needing)
         r_partial_fill_mask[2, :] = np.bitwise_and(r_partial_fill_mask[2, :], ~zero_mask_critical_to_resource)
-
-#         print("r_mat_acc: ", r_mat_acc)
-#         print("resource_left: ", resource_left)
-#         print("r_full_fill_mask: ", r_full_fill_mask)
-#         print("r_partial_fill_mask: ", r_partial_fill_mask)
         
         if r_full_fill_mask[0, :].any():
             Phxwx[r_full_fill_mask[0, :]] = 1
@@ -149,49 +103,20 @@ def icu_or_vent_prob_update(a_resource, r_mat_acc, n_hosp, n_critical, n_age_gro
             Phxwx[r_partial_fill_mask[0, :]] = \
             np.array(resource_left[0, r_partial_fill_mask[0, :]]/n_awaiting[r_partial_fill_mask[0, :]]).flatten()
 
-#         print("awaiting_resource_r_full_fill_mask: ", r_full_fill_mask[0, :])
-#         print("awaiting_resource_r_partial_fill_mask: ", r_partial_fill_mask[0, :])
-        # print("awaiting_resource_mat_acc: ", r_mat_acc[0, :])
-        # print("awaiting_resource_left: ", resource_left[0, :])
-        # print("Phxwx: ", Phxwx)
-
-        
-#             print("n_hosp.sum(): ", n_hosp.sum())
         if r_full_fill_mask[1, :].any():            
             Phx[r_full_fill_mask[1, :]] = \
             (n_h_to_needing[r_full_fill_mask[1, :]]/n_hosp[r_full_fill_mask[1, :]]).flatten()
 
         if r_partial_fill_mask[1, :].any():
-            # print("zero_mask_h_to_needing: ", zero_mask_h_to_needing)
-            # print("r_partial_fill_mask[1, :]: ", r_partial_fill_mask[1, :])
-            # print("resource_left[1, :]:", resource_left[1, :])
-            # print("resource_left[1, [r_partial_fill_mask[1, :]]]:", resource_left[1, r_partial_fill_mask[1, :]])
-            # print("n_hosp[r_partial_fill_mask[1, :]]: ", n_hosp[r_partial_fill_mask[1, :]])
-            # print(np.array(resource_left[1, r_partial_fill_mask[1, :]]/n_hosp[r_partial_fill_mask[1, :]]).flatten())
             Phx[r_partial_fill_mask[1, :]] = \
             np.array(resource_left[1, r_partial_fill_mask[1, :]]/n_hosp[r_partial_fill_mask[1, :]]).flatten()
-            # print('test2')
 
-#         print("h_to_resource_r_full_fill_mask: ", r_full_fill_mask[1, :])
-#         print("h_to_resource_r_partial_fill_mask: ", r_partial_fill_mask[1, :])
-        # print("h_to_resource_mat_acc: ", r_mat_acc[1, :])
-        # print("h_to_resource_left: ", resource_left[1, :])
-        # print("Phx: ", Phx)
-        
-#         if n_critical.sum() > 0:
-#             print("n_critical.sum(): ", n_critical.sum())
         if r_full_fill_mask[2, :].any():
             Pcx[r_full_fill_mask[2, :]] = \
             (n_critical_to_resource[r_full_fill_mask[2, :]]/n_critical[r_full_fill_mask[2, :]]).flatten()
         if r_partial_fill_mask[2, :].any():
             Pcx[r_partial_fill_mask[2, :]] = \
             np.array(resource_left[2, r_partial_fill_mask[2, :]]/n_critical[r_partial_fill_mask[2, :]]).flatten()
-
-#         print("c_to_icu_x_r_full_fill_mask: ", r_full_fill_mask[2, :])
-#         print("c_to_icu_x_r_partial_fill_mask: ", r_partial_fill_mask[2, :])
-        # print("c_to_icu_x_mat_acc: ", r_mat_acc[2, :])
-        # print("c_to_icu_x_resource_left: ", resource_left[2, :])
-        # print("Pcx: ", Pcx)
         
         if young_age_first:
             used_resource = np.multiply(Phxwx, n_awaiting) + \
@@ -201,10 +126,8 @@ def icu_or_vent_prob_update(a_resource, r_mat_acc, n_hosp, n_critical, n_age_gro
             Pcx[0]*n_critical[0]
         
         used_resource = used_resource.sum()
-
     
     return Phxwx, Phx, Pcx, used_resource, r_full_fill_mask, r_partial_fill_mask, resource_left
-
 
 #############################################
 # Update the number of deaths and the cause
@@ -240,8 +163,6 @@ def death_num_update(x, P_matrix, icu_with_vent_rate, n_age_group, d_cause_num):
     
     return death_cause_mat
 
-
-
 ############################################################################################################################################
 # Update the state change probabilities based on the numbers of paitients in each state, the number of available beds, ICUs and ventilators
 # Would call severe_prob_update() and icu_or_vent_prob_update() for the state change probability update
@@ -251,7 +172,6 @@ def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age
     # If young_age first, then tyounger people have higher priority to get medical resouces 
     # (unfortunate in this situation)
 
-    # TODO add back
     h_i_rate = dict_initial_rate['h_i_rate']
     icu_with_vent_rate = dict_initial_rate['icu_with_vent_rate']
 
@@ -291,8 +211,7 @@ def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age
     n_icu = x[:, state_num["i_state"]]
     n_icu_vent = x[:, state_num["v_state"]]
     n_icu_awaiting = x[:, state_num["hiw_state"]]
-    n_icu_vent_awaiting = x[:, state_num["hvw_state"]]
-    
+    n_icu_vent_awaiting = x[:, state_num["hvw_state"]]    
     
     # Hospitalised to (ICU or ICU + vent) OR (awaiting ICU or ICU + vent) would depend on ICU and vent availability
     n_h_to_needing_icu = np.floor(np.round(n_hosp*h_i_rate)*(1 - icu_with_vent_rate))
@@ -315,9 +234,6 @@ def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age
     a_icu = t_icu - n_icu.sum() - n_icu_vent.sum() + vacated_icu.sum()
     a_vent = t_vent - n_icu_vent.sum() + vacated_vent.sum()
     a_resource = np.amin([a_icu, a_vent])
-#     print("a_icu: ", a_icu)
-#     print("a_vent: ", a_vent)
-#     print("a_resource", a_resource)
 
     # Fill in ICU + vent first
     v_mat_acc = np.concatenate(([n_icu_vent_awaiting], [n_h_to_needing_icu_vent], \
@@ -327,12 +243,10 @@ def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age
     Phvwv, Phv, Pcv, used_icu_vent, _, _, _ = \
     icu_or_vent_prob_update(a_resource, v_mat_acc, n_hosp, n_critical, n_age_group, young_age_first)
 
-
     # Update available resources 
     # (by taking away resources that will be used by the number of patients who will get ICU + vent)
     a_icu = a_icu - used_icu_vent
-    a_vent = a_vent - used_icu_vent
-    
+    a_vent = a_vent - used_icu_vent    
     
     # Fill in the rest of ICU beds
     i_mat_acc = np.concatenate(([n_icu_awaiting], [n_h_to_needing_icu], \
@@ -362,8 +276,6 @@ def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age
         nPsd[~severe_zero_mask] = (1 - Psh[~severe_zero_mask])*Psd[~severe_zero_mask]
     
     Pss = 1 - nPsc - Psh - nPsd
-    # print("Psh: ", Psh)
-    # print("Pss: ", Pss)
     
     # Critical cases
     # The probability of critical cases that will pass away if not sent into ICU is adjusted based on 
@@ -399,13 +311,6 @@ def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age
     nPhr = (1 - Phi - Phv - Phhiw - Phhvw)*Phr
     nPhd = (1 - Phi - Phv - Phhiw - Phhvw)*Phd
     Phh = 1 - Phi - Phv - Phhiw - Phhvw - nPhd - nPhr
-    # print("Phi: ", Phi)
-    # print("Phhiw: ", Phhiw)
-    # print("Phv: ", Phv)
-    # print("Phhvw: ", Phhvw)
-    # print("nPhr: ", nPhr)
-    # print("nPhd: ", nPhd)
-    # print("Phh: ", Phh)    
     
     # The probability of hospitalised cases awaiting ICU will pass away is adjusted based on 
     # hospitalised cases awaiting ICU to other states 
@@ -416,8 +321,6 @@ def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age
     if not hiw_zero_mask.all():
         nPhiwd[~hiw_zero_mask] = (1 - Phiwi[~hiw_zero_mask])*Phiwd[~hiw_zero_mask]
     Phiwhiw = 1 - Phiwi - nPhiwd
-    # print("nPhiwd: ", nPhiwd)
-    # print("Phiwhiw: ", Phiwhiw)
     
     # The probability of hospitalised cases awaiting ICU + vent will pass away is adjusted based on 
     # hospitalised cases awaiting ICU + vent to other states 
@@ -428,8 +331,6 @@ def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age
     if not hvw_zero_mask.all():
         nPhvwd[~hvw_zero_mask] = (1 - Phvwv[~hvw_zero_mask])*Phvwd[~hvw_zero_mask]
     Phvwhvw = 1 - Phvwv - nPhvwd
-    # print("nPhvwd: ", nPhvwd)
-    # print("Phvwhvw: ", Phvwhvw)
     
     P_matrix[state_num["s_state"], state_num["h_state"], :] = Psh
     P_matrix[state_num["s_state"], state_num["c_state"], :] = nPsc
@@ -465,15 +366,4 @@ def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age
     P_matrix[state_num["hvw_state"], state_num["d_state"], :] = nPhvwd
     P_matrix[state_num["hvw_state"], state_num["hvw_state"], :] = Phvwhvw
     
-    
-#     print("P_matrix: ", P_matrix)
-    
-#     np.ones((1, n_age_group))*h_i_rate/avg_h_to_i * h_to_i_control
-    
-    
-    
-    
     return P_matrix, a_hosp_bed, a_icu, a_vent
-
-
-
