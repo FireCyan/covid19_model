@@ -11,10 +11,8 @@ import random
 
 # Import custom functions
 from src.covid19_prob_func import severe_prob_update, icu_or_vent_prob_update, update_prob, death_num_update
-# from covid19_plot_func import plot_state_num, plot_death_cause, plot_death_acc, plot_death_icu_rate
 from src.covid19_prob_parameter import d_cause_num
-# from src.covid19_prob_parameter import get_prob_matrix # TODO, add back
-from src.covid19_prob_parameter import * # TODO, delete
+from src.covid19_prob_parameter import get_prob_matrix
 
 ################################
 
@@ -34,96 +32,98 @@ col_iterables = [col_age, col_state]
 col_death_iterables = [col_age, col_death_cause]
 # test = pd.MultiIndex.from_product(col_iterables)
 
-def run_model(daily_case, pop_ratio, n_days, init_P_matrix, t_hosp_bed, t_icu, t_vent, model_config): # TODO: remove init_P_matrix
+def initialise_model(model_config):
+
+    dict_initial_rate = {}
+
+    init_P_matrix = get_prob_matrix(model_config)
+    
+    dict_initial_rate['Psc'] = init_P_matrix[1,2,:].flatten() # Need to flatten for the multiplication to work
+    dict_initial_rate['Psd'] = init_P_matrix[1,9,:].flatten()
+    dict_initial_rate['Pcd'] = init_P_matrix[2,9,:].flatten()
+    dict_initial_rate['Phr'] = init_P_matrix[3,8,:].flatten()
+    dict_initial_rate['Phd'] = init_P_matrix[3,9,:].flatten()
+    dict_initial_rate['Pir'] = init_P_matrix[6,8,:].flatten()
+    dict_initial_rate['Pid'] = init_P_matrix[6,9,:].flatten()
+    dict_initial_rate['Pvr'] = init_P_matrix[7,8,:].flatten()
+    dict_initial_rate['Pvd'] = init_P_matrix[7,9,:].flatten()
+    dict_initial_rate['Phiwd'] = init_P_matrix[4,9,:].flatten()
+    dict_initial_rate['Phvwd'] = init_P_matrix[5,9,:].flatten()
+    dict_initial_rate['h_i_rate'] = model_config['rate']['hospitalised_to_icu_rate']
+    dict_initial_rate['icu_with_vent_rate'] = model_config['rate']['icu_with_vent_rate']
+
+    return init_P_matrix, dict_initial_rate
+
+def run_multiple(daily_case, pop_ratio, n_days, t_hosp_bed, t_icu, t_vent, model_config):
+    '''
+    Use this function to run for loops to get the modelled number of patients in different states with different number of ICU beds
+    '''
+
+    ##### Initialise variables #####
     list_df_infected = []
     list_df_death_cause = []
 
     a_hosp_bed = t_hosp_bed
-    a_icu = t_icu
-    a_vent = t_vent
 
-    dict_initial_rate = {}
-    # TODO: add back
-    # init_P_matrix = get_prob_matrix(model_config)
-    # dict_initial_rate['Psc'] = init_P_matrix[1,2,:]
-    # dict_initial_rate['Psd'] = init_P_matrix[1,9,:]
-    # dict_initial_rate['Pcd'] = init_P_matrix[2,9,:]
-    # dict_initial_rate['Phr'] = init_P_matrix[3,8,:]
-    # dict_initial_rate['Phd'] = init_P_matrix[3,9,:]    
-    # dict_initial_rate['Pir'] = init_P_matrix[6,8,:]
-    # dict_initial_rate['Pid'] = init_P_matrix[6,9,:]
-    # dict_initial_rate['Pvr'] = init_P_matrix[7,8,:]
-    # dict_initial_rate['Pvd'] = init_P_matrix[7,9,:]
-    # dict_initial_rate['Phiwd'] = init_P_matrix[4,9,:]
-    # dict_initial_rate['Phvwd'] = init_P_matrix[5,9,:]
-    # dict_initial_rate['h_i_rate'] = model_config['rate']['hospitalised_to_icu_rate']
-    # icu_with_vent_rate = model_config['rate']['icu_with_vent_rate']
-    # dict_initial_rate['icu_with_vent_rate'] = icu_with_vent_rate
-
-    # n_age_group = init_P_matrix.shape[2]
-    # n_state = init_P_matrix.shape[0]
-    
     for t in range(len(t_icu)):
         print("t_icu: ", t_icu[t])
         a_icu = int(t_icu[t])
         a_vent = int(t_vent[t])
 
-        df_infected = ""
-        df_infected = pd.DataFrame(columns=pd.MultiIndex.from_product(col_iterables))
-        df_death_cause = ""
-        df_death_cause = pd.DataFrame(columns=pd.MultiIndex.from_product(col_death_iterables))
+        ##### Run the main model step #####
+        df_infected, df_death_cause = run_model(daily_case, pop_ratio, n_days, a_hosp_bed, a_icu, a_vent, model_config)
 
-        x = np.zeros((n_age_group, n_state))
-        y = np.zeros((n_age_group, n_state))
-
-        P_mat = init_P_matrix
-
-        for d in range(n_days):
-            if d % 10 == 0:
-                print("Running model for Day {}...".format(d))
-                # print(P_mat)
-            
-            
-            if d < len(daily_case):
-                additional_cases = np.round(pop_ratio*daily_case[d])
-                x[:,0] = x[:,0] + additional_cases
-                # print("additional_cases: ", additional_cases)
-
-
-            # print("x: ", x)
-            # print("a_hosp_bed: ", a_hosp_bed)
-            # print("a_icu: ", a_icu)
-            # print("a_vent: ", a_vent)
-            # print(additional_cases)
-
-            # Update probability matrix
-            P_mat, _, _, _ = update_prob(P_mat, dict_initial_rate, x, a_hosp_bed, a_icu, a_vent, young_age_first=True)
-
-
-            for i in range(n_age_group):
-                y[i, :] = np.dot(x[i, :], P_mat[:,:,i])
-                # y[i, :]= np.round(y[i, :])
-                y[i, :]= np.floor(y[i, :])
-                # mat_one = y[i, :] == 1
-                # if random.random() > 0.5:
-                #     y[i, :][mat_one] = 0
-
-            # death_cause_mat = death_num_update(x, P_mat, dict_initial_rate['icu_with_vent_rate'], n_age_group, d_cause_num)
-            death_cause_mat = death_num_update(x, P_mat, icu_with_vent_rate, n_age_group, d_cause_num)
-            df_death_cause.loc[len(df_infected)] = death_cause_mat.flatten(order='C').tolist() + \
-            death_cause_mat.sum(axis=0).tolist()
-
-        #     print(y.flatten(order='C').tolist() + y.sum(axis=0).tolist())
-
-            df_infected.loc[len(df_infected)] = y.flatten(order='C').tolist() + y.sum(axis=0).tolist()
-        #     df_infected.append(pd.Series(y.flatten(order='C').tolist()), ignore_index=True)
-            x = y
-
-            
-            # print("------------------------------------------------------\n")
-        print("Finished running model for t_icu value of {}".format(t_icu[t]))
+        print("Finished running model for t_icu value of {}".format(a_icu))
         print("================================================================\n")
+
+        ##### Append the results into list for further analyses/plotting #####
         list_df_infected.append(df_infected)
         list_df_death_cause.append(df_death_cause)
 
     return list_df_infected, list_df_death_cause
+
+
+def run_model(daily_case, pop_ratio, n_days, a_hosp_bed, a_icu, a_vent, model_config):
+    
+    df_infected = pd.DataFrame(columns=pd.MultiIndex.from_product(col_iterables))
+    df_death_cause = pd.DataFrame(columns=pd.MultiIndex.from_product(col_death_iterables))
+
+    init_P_matrix, dict_initial_rate = initialise_model(model_config)
+
+    P_mat = init_P_matrix
+
+    n_age_group = init_P_matrix.shape[2]
+    n_state = init_P_matrix.shape[0]
+    icu_with_vent_rate = dict_initial_rate['icu_with_vent_rate']
+
+    df_current = np.zeros((n_age_group, n_state))
+    df_next = np.zeros((n_age_group, n_state))
+
+    ##### Loop over number of days to get modelled number of patients in different states #####
+    for d in range(n_days):
+        if d % 10 == 0:
+            print("Running model for Day {}...".format(d))        
+        
+        if d < len(daily_case):
+            additional_cases = np.round(pop_ratio*daily_case[d])
+            df_current[:,0] = df_current[:,0] + additional_cases
+
+        ##### Update probability matrix #####
+        P_mat, _, _, _ = update_prob(P_mat, dict_initial_rate, df_current, a_hosp_bed, a_icu, a_vent, young_age_first=True)
+
+        ##### Update the number of cases for the next step/day #####
+        for i in range(n_age_group):
+            df_next[i, :] = np.dot(df_current[i, :], P_mat[:,:,i])
+            df_next[i, :]= np.floor(df_next[i, :])
+
+        ##### Update the number of deaths and the cause #####
+        death_cause_mat = death_num_update(df_current, P_mat, icu_with_vent_rate, n_age_group, d_cause_num)
+        df_death_cause.loc[len(df_infected)] = death_cause_mat.flatten(order='C').tolist() + \
+        death_cause_mat.sum(axis=0).tolist()
+
+        ##### Update the number of patients in each state #####
+        df_infected.loc[len(df_infected)] = df_next.flatten(order='C').tolist() + df_next.sum(axis=0).tolist()
+
+        df_current = df_next
+
+    return df_infected, df_death_cause

@@ -23,7 +23,7 @@ class CovidConf:
         if config_dir:
             self.config_dir = self.project_dir / config_dir
         else:
-            self.config_dir = self.porject_dir / "config"
+            self.config_dir = self.project_dir / "config"
 
         config_file_path = self.config_dir / config_file
         config_key_val = read_config(config_file_path.as_posix())

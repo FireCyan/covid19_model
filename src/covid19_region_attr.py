@@ -64,13 +64,14 @@ def create_region(
     age_group_pop_ratio_region = age_group_pop_region/age_group_pop_region.sum()
 
     # Daily cases
-    df_region_case = pd.read_csv(repo_loc + config['raw_data'])
-    acc_case = df_region_case[config['col_daily_case']].to_numpy() # accumulated Covid cases
-    daily_case = np.append(acc_case[0], np.diff(acc_case))
-    # if 'raw_data' in config.__dict__.keys():
-        
-    # elif config['region']['name'].upper() == 'WUHAN':
-    #     acc_case = np.array(config['daily_accumulated_case_data']) # accumulated Covid cases
+    if 'acc_case_data' in config.__dict__.keys():
+        df_region_case = pd.read_csv(repo_loc + config['acc_case_data'])
+        acc_case = df_region_case[config['col_daily_case']].to_numpy() # accumulated Covid cases
+        daily_case = np.append(acc_case[0], np.diff(acc_case))
+    elif 'daily_case_data' in config.__dict__.keys():
+        df_region_case = pd.read_csv(repo_loc + config['daily_case_data'])
+        daily_case = df_region_case[config['col_daily_case']].to_numpy()
+        acc_case = np.cumsum(daily_case)
 
     # ICU beds
     if config['region']['name'].upper() == 'BAVARIA':

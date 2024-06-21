@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# from src.covid19_prob_parameter import state_num # TODO: add back
+from src.covid19_prob_parameter import state_num # TODO: add back
 # TODO remove below
-from src.covid19_prob_parameter import Psc, Psd, Pcd, Phd, Phr, Phiwd, Phvwd, Pid, Pir, Pvd, Pvr, h_i_rate, icu_with_vent_rate, state_num, d_cause_num
+# from src.covid19_prob_parameter import Psc, Psd, Pcd, Phd, Phr, Phiwd, Phvwd, Pid, Pir, Pvd, Pvr, h_i_rate, icu_with_vent_rate, state_num, d_cause_num
 
 
 ################################
@@ -252,21 +252,21 @@ def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age
     # (unfortunate in this situation)
 
     # TODO add back
-    # h_i_rate = dict_initial_rate['h_i_rate']
-    # icu_with_vent_rate = dict_initial_rate['icu_with_vent_rate']
+    h_i_rate = dict_initial_rate['h_i_rate']
+    icu_with_vent_rate = dict_initial_rate['icu_with_vent_rate']
 
-    # Psc = dict_initial_rate['Psc']
-    # Psd = dict_initial_rate['Psd']
-    # Pcd = dict_initial_rate['Pcd']
+    Psc = dict_initial_rate['Psc']
+    Psd = dict_initial_rate['Psd']
+    Pcd = dict_initial_rate['Pcd']
     
-    # Phr = dict_initial_rate['Phr']
-    # Phd = dict_initial_rate['Phd']
-    # Pir = dict_initial_rate['Pir']
-    # Pid = dict_initial_rate['Pid']
-    # Pvr = dict_initial_rate['Pvr']
-    # Pvd = dict_initial_rate['Pvd']
-    # Phiwd = dict_initial_rate['Phiwd']
-    # Phvwd = dict_initial_rate['Phvwd']
+    Phr = dict_initial_rate['Phr']
+    Phd = dict_initial_rate['Phd']
+    Pir = dict_initial_rate['Pir']
+    Pid = dict_initial_rate['Pid']
+    Pvr = dict_initial_rate['Pvr']
+    Pvd = dict_initial_rate['Pvd']
+    Phiwd = dict_initial_rate['Phiwd']
+    Phvwd = dict_initial_rate['Phvwd']
     
     # Update the number of empty hospital beds and the probability of Psh
     # Patients who will recover or pass away will vacate the hospital bed
