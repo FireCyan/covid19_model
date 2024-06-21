@@ -12,7 +12,8 @@ import random
 # Import custom functions
 from src.covid19_prob_func import severe_prob_update, icu_or_vent_prob_update, update_prob, death_num_update
 from src.covid19_prob_parameter import d_cause_num
-from src.covid19_prob_parameter import get_prob_matrix
+from src.covid19_prob_parameter import get_initial_prob_matrix
+from src.conf_helper import CovidConf
 
 ################################
 
@@ -32,11 +33,21 @@ col_iterables = [col_age, col_state]
 col_death_iterables = [col_age, col_death_cause]
 # test = pd.MultiIndex.from_product(col_iterables)
 
-def initialise_model(model_config):
+def initialise_model(model_config: CovidConf):
+    '''
+    Build the initial state transition probability matrix with the config given
+
+    Args:
+        model_config (CovidConf): user provided configuration object that is dictionary like to get model parameters
+
+    Return:
+        init_P_matrix (np.array): initial state transition probability matrix (Markov matrix)
+        dict_initial_rate (dict): dictonary that store some of the model parameter
+    '''
 
     dict_initial_rate = {}
 
-    init_P_matrix = get_prob_matrix(model_config)
+    init_P_matrix = get_initial_prob_matrix(model_config)
     
     dict_initial_rate['Psc'] = init_P_matrix[1,2,:].flatten() # Need to flatten for the multiplication to work
     dict_initial_rate['Psd'] = init_P_matrix[1,9,:].flatten()
@@ -54,9 +65,30 @@ def initialise_model(model_config):
 
     return init_P_matrix, dict_initial_rate
 
-def run_multiple(daily_case, pop_ratio, n_days, t_hosp_bed, t_icu, t_vent, model_config):
+def run_multiple(
+        daily_case: np.array,
+        pop_ratio: np.array,
+        n_days: int,
+        t_hosp_bed: int,
+        t_icu: list,
+        t_vent: list,
+        model_config: CovidConf
+    ):
     '''
-    Use this function to run for loops to get the modelled number of patients in different states with different number of ICU beds
+    Use this function to run for loops to get the modelled number of patients in different states and death cause with different number of ICU beds/ventilators
+
+    Args:
+        daily_case (np.array): daily number of Covid cases reported
+        pop_ratio (np.array): the ratio of each age population group
+        n_days (int): number of days to run the model for
+        t_hosp_bed (int): number of hospital beds
+        t_icu (list): list of ICU beds for multiple model runs. Note that the index should match with t_vent
+        t_vent: (list): list of ventilator for multiple model runs. Note that the index should match with t_icu
+        model_config (CovidConf): user provided configuration object that is dictionary like to get model parameters
+
+    Return:
+        list_df_infected (list): list of dataframes that have the number of Covid patients in different states
+        list_df_death_cause (list): list of dataframes that have the number of deaths with different causes
     '''
 
     ##### Initialise variables #####
@@ -84,6 +116,22 @@ def run_multiple(daily_case, pop_ratio, n_days, t_hosp_bed, t_icu, t_vent, model
 
 
 def run_model(daily_case, pop_ratio, n_days, a_hosp_bed, a_icu, a_vent, model_config):
+    '''
+    Use this function to run the model and get the number of patients in different states and death cause with different number of ICU beds/ventilators
+
+    Args:
+        daily_case (np.array): daily number of Covid cases reported
+        pop_ratio (np.array): the ratio of each age population group
+        n_days (int): number of days to run the model for
+        a_hosp_bed (int): number of hospital beds
+        a_icu (int): number of ICU beds
+        a_vent: (int): number of ventilators
+        model_config (CovidConf): user provided configuration object that is dictionary like to get model parameters
+
+    Return:
+        df_infected (pd.DataFrame): dataframe that has the number of Covid patients in different states
+        df_death_cause (pd.DataFrame): dataframe that has the number of deaths with different causes
+    '''
     
     df_infected = pd.DataFrame(columns=pd.MultiIndex.from_product(col_iterables))
     df_death_cause = pd.DataFrame(columns=pd.MultiIndex.from_product(col_death_iterables))

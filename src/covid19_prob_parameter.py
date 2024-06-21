@@ -17,8 +17,12 @@ from src.conf_helper import CovidConf
 
 #################################
 
-# Note that the rate for each age is store in the following list, with index 0 corresponding to 0-9 age group and 
-# so on.
+# Note that the rate for each age is store in the following list, with index 0 corresponding to 0-9 age group and so on.
+
+
+#######################################################
+# Initialise and set up state numbers and death cause #
+#######################################################
 
 state_num = {}
 
@@ -33,9 +37,7 @@ state_num["v_state"] = 7
 state_num["r_state"] = 8
 state_num["d_state"] = 9
 
-####################################
-# Initialise and set up death cause
-####################################
+
 d_cause_num = {}
 
 d_cause_num["s"]= 0
@@ -55,9 +57,18 @@ def load_list_values(list_dict):
     return list_temp
 
 ##########################################
-# Assign parameters for different states
+# Assign parameters for different states #
 ##########################################
-def get_prob_matrix(config: CovidConf):
+def get_initial_prob_matrix(config: CovidConf) -> np.array:
+    '''
+    This function takes in CovidConf, get the parameters specified in the config file and builds the state transition probability matrix (Markov matrix)
+
+    Args:
+        config (CovidConf): user provided configuration object that is dictionary like to get model parameters
+
+    Returns:
+        P_matrix (np.array): state transition probability matrix (Markov matrix)
+    '''
 
     dict_rate = config['rate']
     dict_state_day = config['state_day']

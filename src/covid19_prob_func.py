@@ -5,14 +5,29 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from src.covid19_prob_parameter import state_num
-
-
 ################################
 
-#######################################################################
-# Update the state change probabilities from severe state 
-#######################################################################
-def severe_prob_update(x, a_hosp_bed, n_age_group, young_age_first):
+###########################################################
+# Update the state change probabilities from severe state #
+###########################################################
+def severe_prob_update(
+        x: np.array,
+        a_hosp_bed: int,
+        n_age_group: int,
+        young_age_first: bool
+    ) -> np.array:
+    '''
+    Update the probability of severe state to hospitalised state given the number of hospital beds available
+
+    Args:
+        x (np.array): number of patients in each age group (1st dimension) and each state (2nd dimension)
+        a_hosp_bed (int): number of hospital beds
+        n_age_group (int): number of age groups
+        young_age_first (bool): whether to assign beds to younger age groups (Yes if True, otherwise assign evenly)
+    
+    Return:
+        Psh (np.array): Probability to transition from severe to hospitalised (for each age group)
+    '''
     # Severe case update testing
     Psh = np.zeros((n_age_group))
 
@@ -46,7 +61,35 @@ def severe_prob_update(x, a_hosp_bed, n_age_group, young_age_first):
 #######################################################################
 # Update the state change probabilities from ICU or ventilation states 
 #######################################################################
-def icu_or_vent_prob_update(a_resource, r_mat_acc, n_hosp, n_critical, n_age_group, young_age_first):
+def icu_or_vent_prob_update(
+        a_resource: int,
+        r_mat_acc: np.array,
+        n_hosp: np.array,
+        n_critical: np.array,
+        n_age_group: int,
+        young_age_first: bool
+    ):
+    '''
+    Update the probability of other states entering ICU or ventilator states based on the ICU beds or ventilators available and the number of hospitalised and critial patients.
+    The general idea is to fill in all the available ICU beds or ventilators to those who are waiting, and if there is a shortage, then update the state probability accordingly. 
+
+    Args:
+        a_resource (int): number of ICU beds or ventilators available
+        r_mat_acc (np.array): accumulated number of patients waiting for ICU beds or ventilators
+        n_hosp (np.array): number of hospitalised patients for each age group
+        n_critical (np.array): number of critical patients for each age group
+        n_age_group (int): number of age groups
+        young_age_first (bool): whether to assign beds to younger age groups (Yes if True, otherwise assign evenly)
+    
+    Return:
+        Phxwx (np.array): Probability to transition from waiting for ICU beds or ventilators to getting ICU beds or ventilators
+        Phx (np.array): Probability to transition from hospitalised to having ICU beds or ventilators
+        Pcx (np.array): Probability to transition from critical to having ICU beds or ventilators
+        used_resource (int): how many ICU beds or ventilators have been used
+        r_full_fill_mask(np.array): groups that have all ICU beds or ventilators fulfilled
+        r_partial_fill_mask (np.array): groups that have ICU beds or ventilators partially fulfilled
+        resource_left (np.array): number of ICU beds or ventlators left after assigning to those in needs
+    '''
     
     Phxwx = np.zeros((n_age_group))
     Phx = np.zeros((n_age_group))
@@ -133,7 +176,26 @@ def icu_or_vent_prob_update(a_resource, r_mat_acc, n_hosp, n_critical, n_age_gro
 # Update the number of deaths and the cause
 #############################################
 
-def death_num_update(x, P_matrix, icu_with_vent_rate, n_age_group, d_cause_num):
+def death_num_update(
+        x: np.array,
+        P_matrix: np.array,
+        icu_with_vent_rate: float,
+        n_age_group: int,
+        d_cause_num: dict,
+    ) -> np.array:
+    '''
+    Update the number of deaths for each age group and cause
+
+    Args:
+        x (np.array): number of patients in each age group (1st dimension) and each state (2nd dimension)
+        P_matrix (np.array): state transition probability matrix (Markov matrix)
+        icu_with_vent_rate (float): the ratio of ventilator:ICU beds
+        n_age_group (int): number of age groups
+        d_cause_num (dict): dictionary that has death causes as keys and ordered numbers as values
+    
+    Return:
+        death_cause_mat (np.array): number of deaths for each age group and cause
+    '''
     
     # Death due to lack of hospital beds
     n_death_cause = len(d_cause_num)
@@ -168,9 +230,37 @@ def death_num_update(x, P_matrix, icu_with_vent_rate, n_age_group, d_cause_num):
 # Would call severe_prob_update() and icu_or_vent_prob_update() for the state change probability update
 ############################################################################################################################################
 
-def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age_group=9, young_age_first=True):
+def update_prob(
+        P_matrix: np.array,
+        dict_initial_rate: dict,
+        x: np.array,
+        t_hosp_bed,
+        t_icu,
+        t_vent,
+        n_age_group=9,
+        young_age_first=True
+    ):
     # If young_age first, then tyounger people have higher priority to get medical resouces 
     # (unfortunate in this situation)
+    '''
+    Update the state transition probability matrix 
+
+    Args:
+        P_matrix (np.array): state transition probability matrix (Markov matrix)
+        dict_initial_rate (dict): dictionary containing the initial probability matrix values
+        x (np.array): number of patients in each age group (1st dimension) and each state (2nd dimension)
+        t_hosp_bed (int): Number of hospital beds available
+        t_icu (int): Number of ICU beds available
+        t_vent (int): Number of ventilators available
+        n_age_group (int): number of age groups
+        young_age_first (bool): whether to assign beds to younger age groups (Yes if True, otherwise assign evenly)
+    
+    Return:
+        P_matrix (np.array): state transition probability matrix (Markov matrix)
+        a_hosp_bed (int): number of hospital beds available after updating probability matrix
+        a_icu (int): number of ICU beds available after updating probability matrix
+        a_vent (int): number of ventilators available after updating probability matrix
+    '''
 
     h_i_rate = dict_initial_rate['h_i_rate']
     icu_with_vent_rate = dict_initial_rate['icu_with_vent_rate']

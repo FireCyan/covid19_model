@@ -14,7 +14,14 @@ death_color_dict = {'Death - lack of hospital bed': 'grey', 'Death - lack of ICU
 # Plot the number of people in each state over time 
 ####################################################
 
-def plot_state_num(df, n_total, title):
+def plot_state_num(
+        df,
+        n_total,
+        title
+    ):
+    '''
+    Plot the number of patients in each state against day number
+    '''
 
     fig, ax = plt.subplots(figsize=(20,10))
     
@@ -65,6 +72,9 @@ def plot_state_num(df, n_total, title):
 ##############################################################
 
 def plot_death_cause(df, n_total, title):
+    '''
+    Plot the number of deaths and their causes against day number
+    '''
 
     fig, ax = plt.subplots(figsize=(20,10))
     
@@ -109,7 +119,10 @@ def plot_death_cause(df, n_total, title):
 ############################################################################
 
 def plot_death_cumsum(df, n_total, title):
-#     print(legend_app)
+    '''
+    Plot the accumulated number of deaths and their causes against day number
+    '''
+
     fig, ax = plt.subplots(figsize=(20,10))
     
     df_death_cause = df.copy()
@@ -157,6 +170,10 @@ def plot_death_cumsum(df, n_total, title):
 ###################################################################
 
 def plot_death_icu_rate(df, list_region):
+    '''
+    Plot the death rate against different adequate ICU percentage
+    '''
+
     df_d_icu_rate = df.copy()
     
     fig, ax = plt.subplots(figsize=(20,10))
@@ -231,6 +248,10 @@ def plot_death_icu_rate(df, list_region):
     return ax
 
 def plot_constant_daily_case_curve(region, list_constant_df_infected, constant_flow_text, icu_case_max):
+    '''
+    Plot the number of patients for each state against day number given a constant daily stream of Covid patients
+    '''
+
     r = region
 
     fig, ax = plt.subplots(figsize=(20,10))
@@ -331,6 +352,10 @@ def plot_constant_daily_case_curve(region, list_constant_df_infected, constant_f
 
 
 def plot_fix_case_diff_days(region, list_fix_total_diff_days_df_infected, fix_total_diff_days_text, icu_case_max, n_total_infect):
+    '''
+    Plot the number of patients for each state against day number given a fixed total number of patients but within different numbers of days
+    '''
+
     r = region
     fig, ax = plt.subplots(figsize=(20,10))
 
