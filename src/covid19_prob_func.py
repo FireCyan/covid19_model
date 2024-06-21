@@ -4,17 +4,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from covid19_prob_parameter import Pms, Pmc, Pmr, Pmm, Pmh, Pmhiw, Pmhvw, Pmi, Pmv, Pmd, \
-Psc, Psh, Psd, Pss, Psr, Psm, Pshiw, Pshvw, Psi, Psv, \
-Pci, Pcv, Pcd, Pcc, Pcm, Pcs, Pch, Pchiw, Pchvw, Pcr, \
-Phi, Phv, Phhiw, Phhvw, Phd, Phr, Phh, Phm, Phs, Phc, \
-Phiwi, Phiwd, Phiwhiw, Phiwm, Phiws, Phiwc, Phiwr, Phiwh, Phiwv, Phiwhvw, \
-Phvwv, Phvwd, Phvwhvw, Phvwm, Phvws, Phvwc, Phvwr, Phvwh, Phvwi, Phvwhiw, \
-Pid, Pir, Pii, Pim, Pis, Pic, Pih, Piv, Pihiw, Pihvw, \
-Pvd, Pvr, Pvv, Pvm, Pvs, Pvc, Pvh, Pvi, Pvhiw, Pvhvw, \
-Prm, Prs, Prc, Prh, Prhiw, Prhvw, Pri, Prv, Prr, Prd, \
-Pdm, Pds, Pdc, Pdh, Pdhiw, Pdhvw, Pdi, Pdv, Pdr, Pdd, \
-h_i_rate, icu_with_vent_rate, state_num, d_cause_num
+# from src.covid19_prob_parameter import state_num # TODO: add back
+# TODO remove below
+from src.covid19_prob_parameter import Psc, Psd, Pcd, Phd, Phr, Phiwd, Phvwd, Pid, Pir, Pvd, Pvr, h_i_rate, icu_with_vent_rate, state_num, d_cause_num
 
 
 ################################
@@ -22,7 +14,7 @@ h_i_rate, icu_with_vent_rate, state_num, d_cause_num
 #######################################################################
 # Update the state change probabilities from severe state 
 #######################################################################
-def severe_prob_update(x, a_hosp_bed, state_num, n_age_group, young_age_first):
+def severe_prob_update(x, a_hosp_bed, n_age_group, young_age_first):
     # Severe case update testing
     Psh = np.zeros((n_age_group))
 #     print("a_hosp_bed: ", a_hosp_bed)
@@ -218,7 +210,7 @@ def icu_or_vent_prob_update(a_resource, r_mat_acc, n_hosp, n_critical, n_age_gro
 # Update the number of deaths and the cause
 #############################################
 
-def death_num_update(x, P_matrix, n_age_group, d_cause_num):
+def death_num_update(x, P_matrix, icu_with_vent_rate, n_age_group, d_cause_num):
     
     # Death due to lack of hospital beds
     n_death_cause = len(d_cause_num)
@@ -255,9 +247,26 @@ def death_num_update(x, P_matrix, n_age_group, d_cause_num):
 # Would call severe_prob_update() and icu_or_vent_prob_update() for the state change probability update
 ############################################################################################################################################
 
-def update_prob(P_matrix, x, t_hosp_bed, t_icu, t_vent, state_num, n_age_group=9, young_age_first=True):
+def update_prob(P_matrix, dict_initial_rate, x, t_hosp_bed, t_icu, t_vent, n_age_group=9, young_age_first=True):
     # If young_age first, then tyounger people have higher priority to get medical resouces 
     # (unfortunate in this situation)
+
+    # TODO add back
+    # h_i_rate = dict_initial_rate['h_i_rate']
+    # icu_with_vent_rate = dict_initial_rate['icu_with_vent_rate']
+
+    # Psc = dict_initial_rate['Psc']
+    # Psd = dict_initial_rate['Psd']
+    # Pcd = dict_initial_rate['Pcd']
+    
+    # Phr = dict_initial_rate['Phr']
+    # Phd = dict_initial_rate['Phd']
+    # Pir = dict_initial_rate['Pir']
+    # Pid = dict_initial_rate['Pid']
+    # Pvr = dict_initial_rate['Pvr']
+    # Pvd = dict_initial_rate['Pvd']
+    # Phiwd = dict_initial_rate['Phiwd']
+    # Phvwd = dict_initial_rate['Phvwd']
     
     # Update the number of empty hospital beds and the probability of Psh
     # Patients who will recover or pass away will vacate the hospital bed
@@ -266,7 +275,7 @@ def update_prob(P_matrix, x, t_hosp_bed, t_icu, t_vent, state_num, n_age_group=9
     
     a_hosp_bed = t_hosp_bed - x.sum(axis=0)[state_num["h_state"]] + vacated_bed.sum()
     
-    Psh = severe_prob_update(x, a_hosp_bed, state_num, n_age_group, young_age_first)
+    Psh = severe_prob_update(x, a_hosp_bed, n_age_group, young_age_first)
         
     # There are 3 pathways of getting into ICU or ICU + ventilator
     # 1. Patients whose conditions have already worsened (in hiw and hvw state) and are waiting for ICU or ICU + ventilator
@@ -345,6 +354,7 @@ def update_prob(P_matrix, x, t_hosp_bed, t_icu, t_vent, state_num, n_age_group=9
     # print("severe_zero_mask: ", severe_zero_mask)
     nPsc = np.zeros((n_age_group))
     nPsd = np.zeros((n_age_group))
+    
     if not severe_zero_mask.all():
         nPsc[~severe_zero_mask] = (1 - Psh[~severe_zero_mask])*Psc[~severe_zero_mask]
     # The probability of severe cases that will pass away if not hospitalised is adjusted based on 
@@ -360,6 +370,7 @@ def update_prob(P_matrix, x, t_hosp_bed, t_icu, t_vent, state_num, n_age_group=9
     # ICU and ICU + vent (left critical cases untreated = (1 - Pci - Pcv))
     critical_zero_mask = n_critical == 0
     nPcd = np.zeros((n_age_group))
+    
     if not critical_zero_mask.all():
         nPcd[~critical_zero_mask] = (1 - Pci[~critical_zero_mask] - Pcv[~critical_zero_mask])*Pcd[~critical_zero_mask]
     nPcd[np.absolute(nPcd) < 1e-6] = 0
@@ -401,6 +412,7 @@ def update_prob(P_matrix, x, t_hosp_bed, t_icu, t_vent, state_num, n_age_group=9
     # (left hospitalised cases awaiting ICU = (1 - Phiwi))
     hiw_zero_mask = n_icu_awaiting == 0
     nPhiwd = np.zeros((n_age_group))
+    
     if not hiw_zero_mask.all():
         nPhiwd[~hiw_zero_mask] = (1 - Phiwi[~hiw_zero_mask])*Phiwd[~hiw_zero_mask]
     Phiwhiw = 1 - Phiwi - nPhiwd
@@ -412,6 +424,7 @@ def update_prob(P_matrix, x, t_hosp_bed, t_icu, t_vent, state_num, n_age_group=9
     # (left hospitalised cases awaiting ICU + vent = (1 - Phvwv))
     hvw_zero_mask = n_icu_vent_awaiting == 0
     nPhvwd = np.zeros((n_age_group))
+    
     if not hvw_zero_mask.all():
         nPhvwd[~hvw_zero_mask] = (1 - Phvwv[~hvw_zero_mask])*Phvwd[~hvw_zero_mask]
     Phvwhvw = 1 - Phvwv - nPhvwd

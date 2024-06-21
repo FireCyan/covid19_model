@@ -1,0 +1,96 @@
+state_day:
+  mild:
+    mild_to_recover: 10
+    mild_to_severe: 2
+    mild_to_critical: 3
+  severe:
+    severe_to_critical: 2
+    severe_to_death: 2
+  hospitalised:
+    hospitalised_to_icu: 2
+    hospitalised_to_icu_ventilator: 2
+    hospitalised_to_recover: 12
+    hospitalised_to_death: 12
+  icu:
+    icu_to_death: 10
+    icu_to_recover: 10
+  icu_ventilator:
+    icu_ventilator_to_death: 10
+    icu_ventilator_to_recover: 10
+  critical:
+    critical_to_death: 1
+
+severe_to_critical_path: 1
+
+rate:
+  severe_rate:
+    # from Moss et al. 2020
+    0_9: 0.0006
+    10_19: 0.0006
+    20_29: 0.0078
+    30_39: 0.029
+    40_49: 0.0511
+    50_59: 0.099
+    60_69: 0.1549
+    70_79: 0.3576
+    80_: 0.6594
+  icu_rate:
+    # from Moss et al. 2020
+    0_9: 0.0002
+    10_19: 0.0002
+    20_29: 0.0023
+    30_39: 0.0085
+    40_49: 0.015
+    50_59: 0.0291
+    60_69: 0.0455
+    70_79: 0.105
+    80_: 0.1936
+  hospitalised_or_icu_death_rate:
+    0_9: 0.0333
+    10_19: 0.0333
+    20_29: 0.0333
+    30_39: 0.0333
+    40_49: 0.0333
+    50_59: 0.0333
+    60_69: 0.0909
+    70_79: 0.1
+    80_: 0.2
+  severe_not_hospitalised_death_rate: 1
+  critical_not_icu_death_rate: 1
+  icu_with_vent_rate: 0.54
+  severe_to_critical_rate: 0.3
+  hospitalised_to_icu_rate: 0.3
+
+n_state: 10
+
+death_rate:
+  crude:
+    0_9: 0
+    10_19: 0.00182
+    20_29: 0.00193
+    30_39: 0.00237
+    40_49: 0.00443
+    50_59: 0.013
+    60_69: 0.036
+    70_79: 0.0796
+    80_: 0.148
+  adjust_censoring:
+    0_9: 0.000954
+    10_19: 0.00352
+    20_29: 0.00296
+    30_39: 0.00348
+    40_49: 0.00711
+    50_59: 0.0206
+    60_69: 0.0579
+    70_79: 0.127
+    80_: 0.233
+  adjust_censoring_under_asce:
+    0_9: 0.000026
+    10_19: 0.000148
+    20_29: 0.0006
+    30_39: 0.00146
+    40_49: 0.00295
+    50_59: 0.0125
+    60_69: 0.0399
+    70_79: 0.0861
+    80_: 0.134

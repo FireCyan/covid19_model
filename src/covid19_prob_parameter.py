@@ -1,78 +1,124 @@
 #################################
 # Import packages
 
+import git
+repo = git.Repo('.', search_parent_directories=True)
+repo_loc = repo.working_tree_dir
+
+import os
+import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+from src.conf_helper import CovidConf
 
 #################################
 
 # Note that the rate for each age is store in the following list, with index 0 corresponding to 0-9 age group and 
 # so on.
 
+state_num = {}
+
+state_num["m_state"]= 0
+state_num["s_state"] = 1
+state_num["c_state"] = 2
+state_num["h_state"] = 3
+state_num["hiw_state"] = 4
+state_num["hvw_state"] = 5
+state_num["i_state"] = 6
+state_num["v_state"] = 7
+state_num["r_state"] = 8
+state_num["d_state"] = 9
+
+####################################
+# Initialise and set up death cause
+####################################
+d_cause_num = {}
+
+d_cause_num["s"]= 0
+d_cause_num["c_hiw"] = 1
+d_cause_num["c_hvw"] = 2
+d_cause_num["h"] = 3
+d_cause_num["i"] = 4
+d_cause_num["v"] = 5
+
+n_death_cause = len(d_cause_num)
+
+def load_list_values(list_dict):
+    list_temp = []
+    for i in list_dict:
+        list_temp.append(list_dict.get(i))
+
+    return list_temp
+
 ##########################################
 # Assign parameters for different states
 ##########################################
+# def get_prob_matrix(config: CovidConf): # TODO: add back
 
-death_rate_crude = np.array([0, 0.00182, 0.00193, 0.00237, 0.00443, 0.013, 0.036, 0.0796, 0.148])
-death_rate_adj_censoring = np.array([0.000954, 0.00352, 0.00296, 0.00348, 0.00711, 0.0206, 0.0579, 0.127, 0.233])
-death_rate_adj_censoring_under_asce = np.array([0.000026, 0.000148, 0.0006, 0.00146, 0.00295, 0.0125, 0.0399, \
-                                                0.0861, 0.134])
+# config = CovidConf(project_dir=repo_loc, config_file=config_file) # TODO: add back
+config = CovidConf(project_dir=repo_loc, config_file='model_param_v1.yaml') # TODO: remove
+
+dict_rate = config['rate']
+dict_state_day = config['state_day']
+
 # death_rate_hospitalised is used for hospitalised, ICU or ICU + vent to death
-dr_h_0_59 = 1/30
-death_rate_hospitalised = np.append(np.array(np.ones((6))*dr_h_0_59), np.array([1/11, 1/10, 1/5])).flatten()
+death_rate_hospitalised = np.array(load_list_values(dict_rate['hospitalised_or_icu_death_rate'])).flatten()
 # Based on Figure 3 from IMHE paper. Note that I took average of the hospitalizations per death value between groups
 # because I used 10-19 rather than 15-24 age group.
 
-death_rate_severe = 1 # Probability of death is set to 100% if a patient stays in severe state (without hospitalised)
-death_rate_critical = 1 # Probability of death is set to 100% if a patient stays in critical state (without ICU or ICU + vent)
+death_rate_severe = dict_rate['severe_not_hospitalised_death_rate']
+death_rate_critical = dict_rate['critical_not_icu_death_rate']
 
 # severe_rate = np.array([0, 0.000408, 0.0104, 0.0343, 0.0425, 0.0816, 0.118, 0.166, 0.184]) # From Robert Verity et al. 2020
 
-severe_rate = np.array([0.0006, 0.0006, 0.0078, 0.029, 0.0511, 0.099, 0.1549, 0.3576, 0.6594]).flatten() # from Moss et al. 2020
+severe_rate = np.array(load_list_values(dict_rate['severe_rate'])).flatten()
 
-icu_rate = np.array([0.0002, 0.0002, 0.0023, 0.0085, 0.015, 0.0291, 0.0455, 0.105, 0.1936]).flatten() # from Moss et al. 2020
+# return severe_rate
+
+icu_rate = np.array(load_list_values(dict_rate['icu_rate'])).flatten()
 
 icu_with_vent_rate = 0.54 # from IMHE paper
 
 n_age_group = severe_rate.shape[0]
-n_state = 10
+n_state = config['n_state']
 
 # Average days from one state to the other
 # mild to others
-avg_m_to_r = 10
-avg_m_to_s = 2
-avg_m_to_c = 3
+avg_m_to_r = dict_state_day['mild']['mild_to_recover']
+avg_m_to_s = dict_state_day['mild']['mild_to_severe']
+avg_m_to_c = dict_state_day['mild']['mild_to_critical']
 
 # Severe to others
-avg_s_to_c = 2
-avg_s_to_d = 2
+avg_s_to_c = dict_state_day['severe']['severe_to_critical']
+avg_s_to_d = dict_state_day['severe']['severe_to_death']
 # Note that severe goes to hospitalisation straightaway provided bed is available
 
 # Critical to others
-avg_c_to_d = 1
+avg_c_to_d = dict_state_day['critical']['critical_to_death']
 # Note that critical goes to ICU straightaway provided ICU is available
 
 # Hospitalised to others
-avg_h_to_i = 2 # hospitalised to ICU
-avg_h_to_v = 2 # hospitalised to ICU + ventilator
-avg_h_to_r = 12 # Originally use 30
-avg_h_to_d = 12 # Originally used 35
+avg_h_to_i = dict_state_day['hospitalised']['hospitalised_to_icu'] # hospitalised to ICU
+avg_h_to_v = dict_state_day['hospitalised']['hospitalised_to_icu_ventilator'] # hospitalised to ICU + ventilator
+avg_h_to_r = dict_state_day['hospitalised']['hospitalised_to_recover'] # Originally use 30
+avg_h_to_d = dict_state_day['hospitalised']['hospitalised_to_death'] # Originally used 35
 
-avg_i_to_d = 10
-avg_i_to_r = 10
+avg_i_to_d = dict_state_day['icu']['icu_to_death']
+avg_i_to_r = dict_state_day['icu']['icu_to_recover']
 
-avg_v_to_d = 10
-avg_v_to_r = 10
+avg_v_to_d = dict_state_day['icu_ventilator']['icu_ventilator_to_death']
+avg_v_to_r = dict_state_day['icu_ventilator']['icu_ventilator_to_recover']
 
-s_to_c_control = 1 # whether to have severe to critical (and hospitalised to ICU) pathways. 0 = no, 1 = yes
+s_to_c_control = config['severe_to_critical_path'] # whether to have severe to critical (and hospitalised to ICU) pathways. 0 = no, 1 = yes
 h_to_i_control = s_to_c_control
 
 # m_c_rate = 0.5
-s_c_rate = 0.3 # According to paper from Moss et al. 2020, the ratio between hospitalised and ICU is 3:1.
+s_c_rate = config['rate']['severe_to_critical_rate'] # According to paper from Moss et al. 2020, the ratio between hospitalised and ICU is 3:1.
 h_i_rate = s_c_rate
-
-
 
 ##################################
 # Probabilities for state changes
@@ -222,20 +268,6 @@ Pdd = np.ones((n_age_group))
 ############################################
 P_matrix = np.zeros((n_state, n_state, n_age_group))
 
-state_num = {}
-
-state_num["m_state"]= 0
-state_num["s_state"] = 1
-state_num["c_state"] = 2
-state_num["h_state"] = 3
-state_num["hiw_state"] = 4
-state_num["hvw_state"] = 5
-state_num["i_state"] = 6
-state_num["v_state"] = 7
-state_num["r_state"] = 8
-state_num["d_state"] = 9
-
-
 P_matrix[state_num["m_state"], state_num["m_state"], :] = Pmm
 P_matrix[state_num["m_state"], state_num["s_state"], :] = Pms
 P_matrix[state_num["m_state"], state_num["c_state"], :] = Pmc
@@ -355,17 +387,4 @@ P_matrix[state_num["d_state"], state_num["v_state"], :] = Pdv
 P_matrix[state_num["d_state"], state_num["r_state"], :] = Pdr
 P_matrix[state_num["d_state"], state_num["d_state"], :] = Pdd
 
-
-####################################
-# Initialise and set up death cause
-####################################
-d_cause_num = {}
-
-d_cause_num["s"]= 0
-d_cause_num["c_hiw"] = 1
-d_cause_num["c_hvw"] = 2
-d_cause_num["h"] = 3
-d_cause_num["i"] = 4
-d_cause_num["v"] = 5
-
-n_death_cause = len(d_cause_num)
+    # return P_matrix # TODO: add back

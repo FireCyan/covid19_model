@@ -4,16 +4,17 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import sklearn
 import requests
 from bs4 import BeautifulSoup
 import pickle
 import random
 
 # Import custom functions
-from covid19_prob_func import severe_prob_update, icu_or_vent_prob_update, update_prob, death_num_update
+from src.covid19_prob_func import severe_prob_update, icu_or_vent_prob_update, update_prob, death_num_update
 # from covid19_plot_func import plot_state_num, plot_death_cause, plot_death_acc, plot_death_icu_rate
-from covid19_prob_parameter import *
+from src.covid19_prob_parameter import d_cause_num
+# from src.covid19_prob_parameter import get_prob_matrix # TODO, add back
+from src.covid19_prob_parameter import * # TODO, delete
 
 ################################
 
@@ -33,16 +34,34 @@ col_iterables = [col_age, col_state]
 col_death_iterables = [col_age, col_death_cause]
 # test = pd.MultiIndex.from_product(col_iterables)
 
-
-
-
-def run_model(daily_case, pop_ratio, n_days, init_P_matrix, t_hosp_bed, t_icu, t_vent):
+def run_model(daily_case, pop_ratio, n_days, init_P_matrix, t_hosp_bed, t_icu, t_vent, model_config): # TODO: remove init_P_matrix
     list_df_infected = []
     list_df_death_cause = []
 
     a_hosp_bed = t_hosp_bed
     a_icu = t_icu
     a_vent = t_vent
+
+    dict_initial_rate = {}
+    # TODO: add back
+    # init_P_matrix = get_prob_matrix(model_config)
+    # dict_initial_rate['Psc'] = init_P_matrix[1,2,:]
+    # dict_initial_rate['Psd'] = init_P_matrix[1,9,:]
+    # dict_initial_rate['Pcd'] = init_P_matrix[2,9,:]
+    # dict_initial_rate['Phr'] = init_P_matrix[3,8,:]
+    # dict_initial_rate['Phd'] = init_P_matrix[3,9,:]    
+    # dict_initial_rate['Pir'] = init_P_matrix[6,8,:]
+    # dict_initial_rate['Pid'] = init_P_matrix[6,9,:]
+    # dict_initial_rate['Pvr'] = init_P_matrix[7,8,:]
+    # dict_initial_rate['Pvd'] = init_P_matrix[7,9,:]
+    # dict_initial_rate['Phiwd'] = init_P_matrix[4,9,:]
+    # dict_initial_rate['Phvwd'] = init_P_matrix[5,9,:]
+    # dict_initial_rate['h_i_rate'] = model_config['rate']['hospitalised_to_icu_rate']
+    # icu_with_vent_rate = model_config['rate']['icu_with_vent_rate']
+    # dict_initial_rate['icu_with_vent_rate'] = icu_with_vent_rate
+
+    # n_age_group = init_P_matrix.shape[2]
+    # n_state = init_P_matrix.shape[0]
     
     for t in range(len(t_icu)):
         print("t_icu: ", t_icu[t])
@@ -78,8 +97,7 @@ def run_model(daily_case, pop_ratio, n_days, init_P_matrix, t_hosp_bed, t_icu, t
             # print(additional_cases)
 
             # Update probability matrix
-            P_mat, _, _, _ = update_prob(P_mat, x, a_hosp_bed, a_icu, a_vent,\
-                                                            state_num, young_age_first=True)
+            P_mat, _, _, _ = update_prob(P_mat, dict_initial_rate, x, a_hosp_bed, a_icu, a_vent, young_age_first=True)
 
 
             for i in range(n_age_group):
@@ -90,7 +108,8 @@ def run_model(daily_case, pop_ratio, n_days, init_P_matrix, t_hosp_bed, t_icu, t
                 # if random.random() > 0.5:
                 #     y[i, :][mat_one] = 0
 
-            death_cause_mat = death_num_update(x, P_mat, n_age_group, d_cause_num)
+            # death_cause_mat = death_num_update(x, P_mat, dict_initial_rate['icu_with_vent_rate'], n_age_group, d_cause_num)
+            death_cause_mat = death_num_update(x, P_mat, icu_with_vent_rate, n_age_group, d_cause_num)
             df_death_cause.loc[len(df_infected)] = death_cause_mat.flatten(order='C').tolist() + \
             death_cause_mat.sum(axis=0).tolist()
 
