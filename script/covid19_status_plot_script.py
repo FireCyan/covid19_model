@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 
 # Import custom functions
 # from covid19_prob_func import severe_prob_update, icu_or_vent_prob_update, update_prob, death_num_update
-from covid19_plot_func import plot_state_num, plot_death_cause, plot_death_cumsum, plot_death_icu_rate
-from covid19_prob_parameter import P_matrix
-from covid19_model import run_model
+from src.covid19_plot_func import plot_state_num, plot_death_cause, plot_death_cumsum, plot_death_icu_rate
+from src.covid19_prob_parameter import P_matrix
+from src.covid19_model import run_model
 
 
 current_wd = Path(r'C:\John_folder\github_projects\covid19_model')
@@ -27,7 +27,7 @@ current_wd = Path(r'C:\John_folder\github_projects\covid19_model')
 # (With the addition of data warehouse in the vacquishcovid19 project, can run with different regions with updated numbers)
 ###########################################################################################################################
 # Bavaria, Lombardy, Wuhan
-from covid19_region_attr import bavaria, lombardy, wuhan, nsw
+from src.covid19_region_attr import bavaria, lombardy, wuhan, nsw
 # Choose a region object to run the model with
 region = lombardy
 
