@@ -13,16 +13,12 @@ sys.path.append(repo_loc)
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-# import sklearn
-# import requests
-# from bs4 import BeautifulSoup
-# import pickle
 
 # Import custom functions
-# from covid19_prob_func import severe_prob_update, icu_or_vent_prob_update, update_prob, death_num_update
 from src.covid19_plot_func import plot_death_icu_rate
 from src.covid19_model import run_model, run_multiple
 from src import conf_helper as cf
+from src.covid19_region_attr import create_region
 ################################
 # Start coding
 
@@ -32,9 +28,7 @@ from src import conf_helper as cf
 # (Thus far I have outputed only Bavaria (Germany), Lombardy (Italy) and Wuhan (China) Excel for running the model
 # (With the addition of data warehouse in the vacquishcovid19 project, can run with different regions with updated numbers)
 ###########################################################################################################################
-# Bavaria, Lombardy, Wuhan
-from src.covid19_region_attr import create_region
-# Choose a region object to run the model with
+
 model_config_file = 'model_param_v1.yaml'
 model_config = cf.CovidConf(project_dir=repo_loc, config_file=model_config_file)
 
