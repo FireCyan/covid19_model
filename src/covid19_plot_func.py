@@ -14,7 +14,14 @@ death_color_dict = {'Death - lack of hospital bed': 'grey', 'Death - lack of ICU
 # Plot the number of people in each state over time 
 ####################################################
 
-def plot_state_num(df, n_total, title):
+def plot_state_num(
+        df,
+        n_total,
+        title
+    ):
+    '''
+    Plot the number of patients in each state against day number
+    '''
 
     fig, ax = plt.subplots(figsize=(20,10))
     
@@ -37,13 +44,15 @@ def plot_state_num(df, n_total, title):
     ax.set_xlabel('Day number', fontsize=24, fontname="Arial",fontweight="bold")
     ax.set_ylabel('Number of people', fontsize=24, rotation=90, fontname="Arial",fontweight="bold")
     ax.tick_params(labelsize=20, width=3, length=10, which='major', direction='in')
-    for tick in ax.xaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
 
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
+    for tick in ax.get_xticklabels():
+        tick.set_fontsize(20)
+        tick.set_fontweight('bold')
+
+    for tick in ax.get_yticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight('bold')
+
     fig.suptitle(title, fontsize=24, fontname="Arial",fontweight="bold")
     ax.legend(fontsize=18)
 
@@ -63,6 +72,9 @@ def plot_state_num(df, n_total, title):
 ##############################################################
 
 def plot_death_cause(df, n_total, title):
+    '''
+    Plot the number of deaths and their causes against day number
+    '''
 
     fig, ax = plt.subplots(figsize=(20,10))
     
@@ -85,12 +97,12 @@ def plot_death_cause(df, n_total, title):
     ax.legend(fontsize=20)
 
     for tick in ax.get_xticklabels():
-            tick.set_fontsize(20) 
-            tick.set_fontweight("bold")
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
     for tick in ax.get_yticklabels():
-            tick.set_fontsize(20) 
-            tick.set_fontweight("bold")
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
     ax2 = ax.twinx()
 
@@ -107,7 +119,10 @@ def plot_death_cause(df, n_total, title):
 ############################################################################
 
 def plot_death_cumsum(df, n_total, title):
-#     print(legend_app)
+    '''
+    Plot the accumulated number of deaths and their causes against day number
+    '''
+
     fig, ax = plt.subplots(figsize=(20,10))
     
     df_death_cause = df.copy()
@@ -130,12 +145,12 @@ def plot_death_cumsum(df, n_total, title):
     ax.legend(loc='upper left', fontsize=20)
 
     for tick in ax.get_xticklabels():
-            tick.set_fontsize(20) 
-            tick.set_fontweight("bold")
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
     for tick in ax.get_yticklabels():
-            tick.set_fontsize(20) 
-            tick.set_fontweight("bold")
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
     ax2 = ax.twinx()
 
@@ -155,6 +170,10 @@ def plot_death_cumsum(df, n_total, title):
 ###################################################################
 
 def plot_death_icu_rate(df, list_region):
+    '''
+    Plot the death rate against different adequate ICU percentage
+    '''
+
     df_d_icu_rate = df.copy()
     
     fig, ax = plt.subplots(figsize=(20,10))
@@ -219,16 +238,20 @@ def plot_death_icu_rate(df, list_region):
     ax.legend(fontsize=18)
 
     for tick in ax.get_xticklabels():
-        tick.set_fontsize(20) 
-        tick.set_fontweight("bold")
+        tick.set_fontsize(20)
+        tick.set_fontweight('bold')
 
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
+    for tick in ax.get_yticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight('bold')
         
     return ax
 
 def plot_constant_daily_case_curve(region, list_constant_df_infected, constant_flow_text, icu_case_max):
+    '''
+    Plot the number of patients for each state against day number given a constant daily stream of Covid patients
+    '''
+
     r = region
 
     fig, ax = plt.subplots(figsize=(20,10))
@@ -257,49 +280,24 @@ def plot_constant_daily_case_curve(region, list_constant_df_infected, constant_f
     ax.set_ylabel('Number of people (dashed line: ICU number)', fontsize=24, rotation=90, fontname="Arial",fontweight="bold")
     ax.tick_params(labelsize=20, width=3, length=10, which='major', direction='in')
 
-    for tick in ax.xaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
+    for tick in ax.get_xticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
+    for tick in ax.get_yticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
     fig.suptitle(title, fontsize=24, fontname="Arial",fontweight="bold")
 
     factor = 1
 
     while (factor*r.t_icu_est) < icu_case_max*1.2:
-        print(factor)
         plt.hlines(factor*int(r.t_icu_est), xmin=0, xmax=90, linestyles='dashed')
         icu_rate = "%.2f" % ((factor*r.t_icu_est/r.get_total_pop())*100000)
         plt.text(60, factor*int(r.t_icu_est)+6, f"ICU number: {factor*int(r.t_icu_est)} ({icu_rate} per 100K pop)", color='black', fontsize=16,\
                 fontweight='bold', horizontalalignment='left', verticalalignment='bottom')
 
         factor = factor + 1
-        
-
-    # plt.hlines(int(r.t_icu_est), xmin=0, xmax=90, linestyles='dashed')
-    # icu_rate = "%.2f" % ((r.t_icu_est/r.get_total_pop())*100000)
-    # plt.text(60, int(r.t_icu_est) + 6, f"ICU number: {int(r.t_icu_est)} ({icu_rate} per 100K pop)", color='black', fontsize=16,\
-    #         fontweight='bold', horizontalalignment='left', verticalalignment='bottom')
-
-    # icu_rate_double = "%.2f" % ((2*r.t_icu_est/r.get_total_pop())*100000)
-    # if ((2*r.t_icu_est/r.get_total_pop())*100000) < n_max*1.2:
-    #     plt.hlines(2*int(r.t_icu_est), xmin=0, xmax=90, linestyles='dashed')
-    #     plt.text(60, 2*int(r.t_icu_est)+6, f"ICU number: {2*int(r.t_icu_est)} ({icu_rate_double} per 100K pop)", color='black', fontsize=16,\
-    #             fontweight='bold', horizontalalignment='left', verticalalignment='bottom')
-        
-    # icu_rate_triple = "%.2f" % ((3*r.t_icu_est/r.get_total_pop())*100000)
-    # if ((3*r.t_icu_est/r.get_total_pop())*100000) < n_max*1.2:
-    #     plt.hlines(3*int(r.t_icu_est), xmin=0, xmax=90, linestyles='dashed')
-    #     plt.text(60, 3*int(r.t_icu_est)+6, f"ICU number: {3*int(r.t_icu_est)} ({icu_rate_triple} per 100K pop)", color='black', fontsize=16,\
-    #             fontweight='bold', horizontalalignment='left', verticalalignment='bottom')
-
-    # icu_rate_quadruple = "%.2f" % ((4*r.t_icu_est/r.get_total_pop())*100000)
-    # if ((4*r.t_icu_est/r.get_total_pop())*100000) < n_max*1.2:
-    #     plt.hlines(4*int(r.t_icu_est), xmin=0, xmax=90, linestyles='dashed')
-    #     plt.text(60, 4*int(r.t_icu_est)+6, f"ICU number: {4*int(r.t_icu_est)} ({icu_rate_quadruple} per 100K pop)", color='black', fontsize=16,\
-    #             fontweight='bold', horizontalalignment='left', verticalalignment='bottom')
 
     total_pop = r.get_total_pop()
 
@@ -329,6 +327,10 @@ def plot_constant_daily_case_curve(region, list_constant_df_infected, constant_f
 
 
 def plot_fix_case_diff_days(region, list_fix_total_diff_days_df_infected, fix_total_diff_days_text, icu_case_max, n_total_infect):
+    '''
+    Plot the number of patients for each state against day number given a fixed total number of patients but within different numbers of days
+    '''
+
     r = region
     fig, ax = plt.subplots(figsize=(20,10))
 
@@ -360,14 +362,15 @@ def plot_fix_case_diff_days(region, list_fix_total_diff_days_df_infected, fix_to
     ax.set_xlabel('Day number', fontsize=24, fontname="Arial",fontweight="bold")
     ax.set_ylabel('Number of people (dashed line: ICU number)', fontsize=24, rotation=90, fontname="Arial",fontweight="bold")
     ax.tick_params(labelsize=20, width=3, length=10, which='major', direction='in')
+    
+    for tick in ax.get_xticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
-    for tick in ax.xaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
+    for tick in ax.get_yticklabels():
+        tick.set_fontsize(20) 
+        tick.set_fontweight("bold")
 
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label.set_fontsize(20) 
-        tick.label.set_fontweight('bold')
     fig.suptitle(title, fontsize=24, fontname="Arial",fontweight="bold")
 
 
@@ -381,19 +384,6 @@ def plot_fix_case_diff_days(region, list_fix_total_diff_days_df_infected, fix_to
                 fontweight='bold', horizontalalignment='left', verticalalignment='bottom')
 
         factor = factor + 1
-
-    # plt.hlines(874, xmin=0, xmax=90, linestyles='dashed')
-    # plt.text(60, 880, "ICU number: 874 (11.68 per 100K pop)", color='black', fontsize=16,\
-    #          fontweight='bold', horizontalalignment='left', verticalalignment='bottom')
-    # plt.hlines(1748, xmin=0, xmax=90, linestyles='dashed')
-    # plt.text(60, 1754, "ICU number: 1748 (23.27 per 100K pop)", color='black', fontsize=16,\
-    #          fontweight='bold', horizontalalignment='left', verticalalignment='bottom')
-    # plt.hlines(2622, xmin=0, xmax=90, linestyles='dashed')
-    # plt.text(60, 2628, "ICU number: 2622 (35.05 per 100K pop)", color='black', fontsize=16,\
-    #          fontweight='bold', horizontalalignment='left', verticalalignment='bottom')
-    # plt.hlines(3496, xmin=0, xmax=90, linestyles='dashed')
-    # plt.text(60, 3502, "ICU number: 3496 (46.74 per 100K pop)", color='black', fontsize=16,\
-    #          fontweight='bold', horizontalalignment='left', verticalalignment='bottom')
 
     ax.set_ylim([-100, icu_case_max*1.2])
     # ax.set_xlim([-5, run_days + 5])

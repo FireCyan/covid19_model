@@ -1,0 +1,21 @@
+daily_case_data: \data\processed\df_lombardia_cleaned_20200417.csv
+col_daily_case: LOM
+
+region:
+  name: Lombardy
+  population_group:
+    0_9: 884414
+    10_19: 982354
+    20_29: 1187594
+    30_39: 1591034
+    40_49: 1566175
+    50_59: 961237
+    60_69: 1182159
+    70_79: 994236
+    80_: 711371
+  death: 9808
+  icu_bed_estimated: 1174 # Initial estimated number of ICU beds in lombardy
+  icu_bed_required: 4500 # Lombardy adequate ICU requirement: 4500 (total accumulated number of infected: 64135, 17-Apr-2020)
+
+country:
+  name: Italy

@@ -1,0 +1,19 @@
+acc_case_data: \data\processed\df_wuhan_cleaned_20200412.csv
+col_daily_case: acc_cases
+
+region:
+  name: Wuhan
+  population_group: # https://www.citypopulation.de/php/china-hubei-admin_c.php?adm1id=4201
+    0_9: 655178
+    10_19: 1193294
+    20_29: 2279487
+    30_39: 1486647
+    40_49: 1668609
+    50_59: 1261163
+    60_69: 718296
+    70_79: 391084
+    80_: 131630
+  death: 3869
+  icu_bed_required: 3200 # Wuhan adequate ICU requirement: 3200 (total accumulated number of infected: 50008, 12-Apr-2020)
+country:
+  name: China
